@@ -115,30 +115,15 @@ exports.parseOracle = function(oracle, name) {
             Cavern of Souls
 
         Add one mana of any color <condition>
-            Command Tower
-            Exotic Orchard
-            Plaza of Heroes
             Reflecting Pool
 
         Add <type> for each <thing> you control
             Tolarian Academy
 
-        [x] As ~ enters the battlefield, choose a color
+        [x] As ~ enters the battlefield, choose a color/basic
 
         DFC cards
 
-        ok
-        conditional delay
-        default null? 0?
-        tainted field
-        {
-            C: 1,
-            W: 1,
-            U: 0,
-            B: 1,
-            R: 0,
-            G: 0
-        };
 */
 function parseManaAbilities(oracle, name) {
     // bools? ints representing turn it could produce? this is awkward
@@ -169,13 +154,14 @@ function parseManaAbilities(oracle, name) {
         const symbolPattern = /{[CWUBRG]}/g;
         const anyColorPattern = /Add (one|two|three) mana of any (one )?color/g;
         const anyTypePattern = /Add (one|two|three) mana of any type/g;
+        const anAmount = /Add an amount of mana of that color/;
         for (const ability of manaAbilities) {
             if (ability.match(anyTypePattern)?.length > 0) {
                 for (const color in canProduce) {
                     canProduce[color] = true;
                 }
             } else {
-                if (ability.match(anyColorPattern)?.length > 0) {
+                if (ability.match(anyColorPattern) !== null || ability.match(anAmount) !== null) {
                     for (const color in canProduce) {
                         if (color !== 'C')
                             canProduce[color] = true;
@@ -216,11 +202,17 @@ function parseManaAbilities(oracle, name) {
     const chooseAType = {
         base: `.*choose a (basic|color).+`,
         subpatterns: [
-            // new TestCase(`${name} is the chosen type in addition to its other types\\.`, null),
+            // meteor crater, assumed near impossible turn 1
             new TestCase(
                 `Choose a color of a permanent you control\\. Add one mana of that color\\.$`, 
                 { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 }
-            )
+            ),
+
+            // nykthos, also assumed nearly impossible t1
+            new TestCase(
+                `Choose a color\\. Add an amount of mana of that color equal to your devotion to that color\\.`, 
+                { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 }
+            ),
         ],
         func: (text, subpatterns) => {
             for (const type of BASIC_TYPES) {
@@ -233,12 +225,20 @@ function parseManaAbilities(oracle, name) {
             }
         }
     };
+    const reflecting = {
+        base: `Add one mana of any type that a land you control could produce\\.$`,
+        subpatterns: null,
+        func: () => {
+            colorDelay = { C: 1, W: 1, U: 1, B: 1, R: 1, G: 1 };
+        }
+    };
 
     // const reflectingPrefix = `Add one mana of any type that a land you control could produce\\.$`;
 
     [
         urborg,
-        chooseAType
+        chooseAType,
+        reflecting
     ].forEach(testAndApply);
 
     return [canProduce, colorDelay];
