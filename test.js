@@ -53,79 +53,149 @@ const templeOfTheFalseGod = { name: 'Temple of the False God', type_line: 'Land'
 
 const azoriusChancery = { name: 'Azorius Chancery', type_line: 'Land', oracle_text: "Azorius Chancery enters the battlefield tapped.\nWhen Azorius Chancery enters the battlefield, return a land you control to its owner's hand.\n{T}: Add {W}{U}."};
 
-// let test = new Land(plains);
+function makeLandObj(name, type_line, oracle_text) {
+    return {
+        name,
+        type_line: type_line || 'Land',
+        oracle_text
+    };
+}
+
+const urborg = makeLandObj('Urborg, Tomb of Yawgmoth', 'Legendary Land', "Each land is a Swamp in addition to its other land types.");
+const cliffgate = makeLandObj('Cliffgate', null, "Cliffgate enters the battlefield tapped.\nAs Cliffgate enters the battlefield, choose a color other than red.\n{T}: Add {R} or one mana of the chosen color.");
+const thranPortal = makeLandObj('Thran Portal', null, "Thran Portal enters the battlefield tapped unless you control two or fewer other lands.\nAs Thran Portal enters the battlefield, choose a basic land type.\nThran Portal is the chosen type in addition to its other types.\nMana abilities of Thran Portal cost an additional 1 life to activate.");
+const meteorCrater = makeLandObj('Meteor Crater', null, "{T}: Choose a color of a permanent you control. Add one mana of that color.");
 
 const expected = {
-    'Lotus Field': 3,
-    'Azorius Chancery': 2,
+    'Lotus Field': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: false, W: true, U: true, B: true, R: true, G: true },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        delay: 3
+    },
+    // 'Azorius Chancery': 2,
 
-    'Drossforge Bridge': 1,
-    'Blood Crypt': 0,
-    'Den of the Bugbear': 0,
-    'Blackcleave Cliffs': 0,
-    'Shipwreck Marsh': 1,
-    'Mystic Sanctuary': 1,
-    'Castle Ardenvale': 1,
-    'Sunpetal Grove': 1,
-    'Morphic Pool': 0,
-    'Temple of the Dragon Queen': 0,
+    // 'Drossforge Bridge': 1,
+    // 'Blood Crypt': 0,
+    // 'Den of the Bugbear': 0,
+    // 'Blackcleave Cliffs': 0,
+    // 'Shipwreck Marsh': 1,
+    // 'Mystic Sanctuary': 1,
+    // 'Castle Ardenvale': 1,
+    // 'Sunpetal Grove': 1,
+    // 'Morphic Pool': 0,
+    // 'Temple of the Dragon Queen': 0,
 
-    'Evolving Wilds': 1,
-    'Arid Mesa': 0,
-    'Prismatic Vista': 0,
+    // 'Evolving Wilds': 1,
+    // 'Arid Mesa': 0,
+    // 'Prismatic Vista': 0,
 
-    'Brokers Hideout': 1,
-    'Rith\'s Grove': 1,
+    // 'Brokers Hideout': 1,
+    // 'Rith\'s Grove': 1,
 
-    'Lake of the Dead': 1,
-    'Sheltered Valley': 0,
-    'Lotus Vale': 2,
+    // 'Lake of the Dead': 1,
+    // 'Sheltered Valley': 0,
+    // 'Lotus Vale': 2,
 
-    'Temple of the False God': 4
+    // 'Temple of the False God': 4,
+
+    // 'Urborg, Tomb of Yawgmoth': 0,
+    // 'Cliffgate': 1,
+
+    // 'Thran Portal': 0,
+    // 'Meteor Crater': 0
 };
 
 function runBatch(batch) {
+    function doPropsMatch(expected, actual) {
+        for (const prop in expected) {
+            if (expected[prop] !== actual[prop])
+                return false;
+        }
+        return true;
+    }
+
     let failed = 0;
     for (const land of batch) {
-        if (expected[land.name] !== land.delay) {
-            console.warn(`${land.name} expected: ${expected[land.name]}, actual: ${land.delay}`);
+        const e = expected[land.name];
+        // console.log(e);
+
+        let hasFailed = false;
+        const failedProps = [];
+        for (const prop in e) {
+            if (typeof e[prop] === 'object') {
+                if (!doPropsMatch(e[prop], land[prop])) {
+                    failedProps.push(prop);
+                    hasFailed = true;
+                }
+            } else if (e[prop] !== land[prop]) {
+                failedProps.push(prop);
+                hasFailed = true;
+            }
+        }
+        if (hasFailed) {
+            console.warn('\n' + land.name + ' fields:');
+            for (const prop of failedProps) {
+                console.warn(`  ${prop}:`);
+                console.warn('    expected: ', land[prop]);
+                console.warn('    actual: ', e[prop]);
+            }
             failed++;
         }
     }
-    console.log('failed: ', failed);
+    if (failed === 0) {
+        console.log('\nAll passed!');
+    } else {
+        console.log('\nfailed: ', failed);
+    }
 }
 
 const allTests = [
     new Land(lotusField),
-    new Land(azoriusChancery),
+    // new Land(azoriusChancery),
 
-    new Land(drossforgeBridge),
-    new Land(bloodCrypt),
-    new Land(denOfTheBugBear),
-    new Land(blackcleaveCliffs),
-    new Land(shipwreckMarsh),
-    new Land(mysticSanctuary),
-    new Land(castleArdenvale),
-    new Land(sunpetalGrove),
-    new Land(morphicPool),
-    new Land(templeOfTheDragonQueen),
+    // new Land(drossforgeBridge),
+    // new Land(bloodCrypt),
+    // new Land(denOfTheBugBear),
+    // new Land(blackcleaveCliffs),
+    // new Land(shipwreckMarsh),
+    // new Land(mysticSanctuary),
+    // new Land(castleArdenvale),
+    // new Land(sunpetalGrove),
+    // new Land(morphicPool),
+    // new Land(templeOfTheDragonQueen),
 
-    new Land(evolvingWilds),
-    new Land(aridMesa),
-    new Land(prismaticVista),
+    // new Land(evolvingWilds),
+    // new Land(aridMesa),
+    // new Land(prismaticVista),
 
-    new Land(brokersHideout),
-    new Land(rithsGrove),
+    // new Land(brokersHideout),
+    // new Land(rithsGrove),
 
-    new Land(lakeOfTheDead),
-    new Land(shelteredValley),
-    new Land(lotusVale),
+    // new Land(lakeOfTheDead),
+    // new Land(shelteredValley),
+    // new Land(lotusVale),
 
-    new Land(templeOfTheFalseGod)
+    // new Land(templeOfTheFalseGod),
+
+    // new Land(urborg),
+    // new Land(cliffgate),
+    
+    // new Land(thranPortal),
+    // new Land(meteorCrater)
 ];
 runBatch(allTests);
 
-console.log(new Land(azoriusChancery));
+// console.log(new Land(thranPortal));
+// console.log(new Land(cliffgate));
+// console.log(new Land(meteorCrater));
 
 // const fetchlandTests = [
 //     new Land(evolvingWilds),

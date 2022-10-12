@@ -1,4 +1,28 @@
 
+const PLAINS = 'Plains';
+const ISLAND = 'Island';
+const SWAMP = 'Swamp';
+const MOUNTAIN = 'Mountain';
+const FOREST = 'Forest';
+
+const BASIC_TYPES = [PLAINS, ISLAND, SWAMP, MOUNTAIN, FOREST];
+
+const TYPE_MAP = {
+    Plains: 'W',
+    Island: 'U',
+    Swamp: 'B',
+    Mountain: 'R',
+    Forest: 'G'
+};
+
+const TYPE_GROUP = `(${PLAINS}|${ISLAND}|${SWAMP}|${MOUNTAIN}|${FOREST})`;
+const ALL_GROUP_PLURAL = `(lands|${PLAINS}|${ISLAND}s|${SWAMP}s|${MOUNTAIN}s|${FOREST}s)`;
+
+function TestCase(str, d) {
+    this.pattern = str;
+    this.d = d;
+}
+
 // WARNING: type lines use the em dash "—" instead of en dash or the hyphen "-"
 exports.parseTypes = function(typeLine) {
     let types, subTypes = null;
@@ -59,16 +83,8 @@ exports.colorsProduced = function(basicTypes) {
         G: false
     };
 
-    const typeMap = {
-        Plains: 'W',
-        Island: 'U',
-        Swamp: 'B',
-        Mountain: 'R',
-        Forest: 'G'
-    };
-
     for (const type in basicTypes) {
-        const key = typeMap[type];
+        const key = TYPE_MAP[type];
         colors[key] = basicTypes[type];
     }
 
@@ -76,17 +92,10 @@ exports.colorsProduced = function(basicTypes) {
 };
 
 exports.parseOracle = function(oracle, name) {
-    // mana ability regex
-    const manaAbilityPattern = new RegExp(/.*{T}.*:\sAdd[{\w}\s,]+\./g);
-    const manaAbilities = oracle.match(manaAbilityPattern);
-
-    // console.log(manaAbilities);
-    // return manaAbilities;
-
-    const canProduce = parseManaAbilities(manaAbilities);
+    const [canProduce, colorDelay] = parseManaAbilities(oracle, name);
     const delay = parseDelay(oracle, name);
 
-    return { canProduce, delay };
+    return { canProduce, colorDelay, delay };
 };
 
 // what colors could this land produce?
@@ -94,6 +103,7 @@ exports.parseOracle = function(oracle, name) {
     todo: 
         lands that gain land types in oracle
         fetchlands
+            depends on other lands in deck... can't determine independently
         gaining mana abilities (Urza's Saga...)
 
     Restricted circumstances:
@@ -113,13 +123,26 @@ exports.parseOracle = function(oracle, name) {
         Add <type> for each <thing> you control
             Tolarian Academy
 
-        As ~ enters the battlefield, choose a color
+        [x] As ~ enters the battlefield, choose a color
 
         DFC cards
+
+        ok
+        conditional delay
+        default null? 0?
+        tainted field
+        {
+            C: 1,
+            W: 1,
+            U: 0,
+            B: 1,
+            R: 0,
+            G: 0
+        };
 */
-function parseManaAbilities(tapAbilities) {
+function parseManaAbilities(oracle, name) {
     // bools? ints representing turn it could produce? this is awkward
-    const canProduce  = {
+    const canProduce = {
         C: false,
         W: false,
         U: false,
@@ -128,37 +151,97 @@ function parseManaAbilities(tapAbilities) {
         G: false
     };
 
-    if (!Array.isArray(tapAbilities)) {
-        return canProduce;
-    }
+    // color-specific delay for annoying special cases
+    // meant to be summed with general delay
+    let colorDelay = {
+        C: 0,
+        W: 0,
+        U: 0,
+        B: 0,
+        R: 0,
+        G: 0
+    };
 
-    const symbolPattern = /{[CWUBRG]}/g;
-    const anyColorPattern = /Add (one|two|three) mana of any (one )?color/g;
-    const anyTypePattern = /Add (one|two|three) mana of any type/g;
-    for (const ability of tapAbilities) {
-        if (ability.match(anyTypePattern)?.length > 0) {
-            for (const color in canProduce) {
-                canProduce[color] = true;
-            }
-        } else {
-            if (ability.match(anyColorPattern)?.length > 0) {
+    const manaAbilityPattern = new RegExp(/.*{T}.*:\sAdd[{\w}\s,]+\./g);
+    const manaAbilities = oracle.match(manaAbilityPattern);
+
+    if (Array.isArray(manaAbilities)) {
+        const symbolPattern = /{[CWUBRG]}/g;
+        const anyColorPattern = /Add (one|two|three) mana of any (one )?color/g;
+        const anyTypePattern = /Add (one|two|three) mana of any type/g;
+        for (const ability of manaAbilities) {
+            if (ability.match(anyTypePattern)?.length > 0) {
                 for (const color in canProduce) {
-                    if (color !== 'C')
-                        canProduce[color] = true;
+                    canProduce[color] = true;
                 }
-            }
-            const test = ability.match(symbolPattern);
-            if (test?.length > 0) {
-                const symbols = new Set(test.join('').match(/\w/g));
-                for (const s of symbols) {
-                    if (Object.hasOwn(canProduce, s))
-                        canProduce[s] = true;
+            } else {
+                if (ability.match(anyColorPattern)?.length > 0) {
+                    for (const color in canProduce) {
+                        if (color !== 'C')
+                            canProduce[color] = true;
+                    }
+                }
+                const test = ability.match(symbolPattern);
+                if (test?.length > 0) {
+                    const symbols = new Set(test.join('').match(/\w/g));
+                    for (const s of symbols) {
+                        if (Object.hasOwn(canProduce, s))
+                            canProduce[s] = true;
+                    }
                 }
             }
         }
     }
 
-    return canProduce;
+    function testAndApply({base, subpatterns, func}) {
+        const test = oracle.match(new RegExp(base, 'i'));
+        if (test !== null) {
+            func(test[0], subpatterns);
+        }
+    }
+
+    const urborg = {
+        base: `^Each land is a ${TYPE_GROUP} in addition to its other land types\\.$`,
+        subpatterns: null,
+        func: (match) => {
+            for (const type of BASIC_TYPES) {
+                if (match.includes(type)) {
+                    canProduce[TYPE_MAP[type]] = true;
+                }
+            }
+        }
+    };
+
+    // special case for nykthos needed...ugh...
+    const chooseAType = {
+        base: `.*choose a (basic|color).+`,
+        subpatterns: [
+            // new TestCase(`${name} is the chosen type in addition to its other types\\.`, null),
+            new TestCase(
+                `Choose a color of a permanent you control\\. Add one mana of that color\\.$`, 
+                { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 }
+            )
+        ],
+        func: (text, subpatterns) => {
+            for (const type of BASIC_TYPES) {
+                canProduce[TYPE_MAP[type]] = true;
+            }
+            for (const sub of subpatterns) {
+                if (text.match(sub.pattern) && sub.d !== null) {
+                    colorDelay = sub.d;
+                }
+            }
+        }
+    };
+
+    // const reflectingPrefix = `Add one mana of any type that a land you control could produce\\.$`;
+
+    [
+        urborg,
+        chooseAType
+    ].forEach(testAndApply);
+
+    return [canProduce, colorDelay];
 }
 
 /*
@@ -210,10 +293,7 @@ function parseDelay(oracle, name) {
     // intention is you can add 1 to the delay to determine the "normal" active turn.
     let delay = 0;
 
-    function TestCase(str, d) {
-        this.pattern = str;
-        this.d = d;
-    }
+    
     
     function applyDelay(str, { pattern, d }) {
         const regex = new RegExp(pattern);
@@ -271,7 +351,7 @@ function parseDelay(oracle, name) {
             new TestCase(`${unlessPrefix} control two or fewer other lands\\.$`, 0),
 
             // slow, bfz lands, mystic sanctuary cycle
-            new TestCase(`${unlessPrefix} control (two|three) or more (basic|other) (lands|Plains|Islands|Swamps|Mountains|Forests)\\.$`, 1),
+            new TestCase(`${unlessPrefix} control (two|three) or more (basic|other) ${ALL_GROUP_PLURAL}\\.$`, 1),
 
             // eldraine castles and m10 buddy
             new TestCase(`${unlessPrefix} control a [\\w\\s]+.`, 1),
@@ -313,7 +393,7 @@ function parseDelay(oracle, name) {
         base: ifWouldPrefix,
         subpatterns: [
             // alliance basic cycle
-            new TestCase(`${ifWouldPrefix}, sacrifice an? (untapped )?(Plains|Island|Swamp|Mountain|Forest) instead\\.`, 1),
+            new TestCase(`${ifWouldPrefix}, sacrifice an? (untapped )?${TYPE_GROUP} instead\\.`, 1),
 
             // sheltered valley
             new TestCase(`${ifWouldPrefix}, instead sacrifice each other permanent named ${name} you control, then put ${name} onto the battlefield\\.$`, 0),

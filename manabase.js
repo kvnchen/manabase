@@ -24,6 +24,7 @@ class Land extends Card {
         
         const parsedOracle = parseOracle(this.oracle_text, this.name);
         this.colorsProduced = parsedOracle.canProduce;
+        this.colorDelay = parsedOracle.colorDelay;
         this.delay = parsedOracle.delay;
     }
 }
