@@ -22,10 +22,12 @@ class Land extends Card {
         this.basicTypes = getBasicTypes(typeData.subTypes);
         this.isBasic = typeData.types.includes('Basic');
         
-        const parsedOracle = parseOracle(this.oracle_text, this.name);
-        this.colorsProduced = parsedOracle.canProduce;
-        this.colorDelay = parsedOracle.colorDelay;
-        this.delay = parsedOracle.delay;
+        ({
+            canProduce: this.colorsProduced,
+            colorDelay: this.colorDelay,
+            delay: this.delay,
+            colorUnreliability: this.colorUnreliability
+        } = parseOracle(this.oracle_text, this.name));
     }
 }
 

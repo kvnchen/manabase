@@ -67,6 +67,12 @@ const thranPortal = makeLandObj('Thran Portal', null, "Thran Portal enters the b
 const meteorCrater = makeLandObj('Meteor Crater', null, "{T}: Choose a color of a permanent you control. Add one mana of that color.");
 const nykthos = makeLandObj('Nykthos, Shrine to Nyx', 'Legendary Land', "{T}: Add {C}.\n{2}, {T}: Choose a color. Add an amount of mana of that color equal to your devotion to that color. (Your devotion to a color is the number of mana symbols of that color in the mana costs of permanents you control.)");
 const reflectingPool = makeLandObj('Reflecting Pool', 'Land', "{T}: Add one mana of any type that a land you control could produce.");
+const plazaOfHarmony = makeLandObj('Plaza of Harmony', 'Land', "When Plaza of Harmony enters the battlefield, if you control two or more Gates, you gain 3 life.\n{T}: Add {C}.\n{T}: Add one mana of any type that a Gate you control could produce.");
+const riverOfTears = makeLandObj('River of Tears', 'Land', "{T}: Add {U}. If you played a land this turn, add {B} instead.");
+const bottomlessVault = makeLandObj('Bottomless Vault', 'Land', "Bottomless Vault enters the battlefield tapped.\nYou may choose not to untap Bottomless Vault during your untap step.\nAt the beginning of your upkeep, if Bottomless Vault is tapped, put a storage counter on it.\n{T}, Remove any number of storage counters from Bottomless Vault: Add {B} for each storage counter removed this way.");
+const cabalStronghold = makeLandObj('Cabal Stronghold', 'Land', "{T}: Add {C}.\n{3}, {T}: Add {B} for each basic Swamp you control.");
+const cloudpost = makeLandObj('Cloudpost', "Land — Locus", "Cloudpost enters the battlefield tapped.\n{T}: Add {C} for each Locus on the battlefield.");
+const cityOfShadows = makeLandObj('City of Shadows', "Land", "{T}, Exile a creature you control: Put a storage counter on City of Shadows.\n{T}: Add {C} for each storage counter on City of Shadows.");
 
 const template = {
     basicTypes: {
@@ -79,6 +85,7 @@ const template = {
     isBasic: false,
     colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: false },
     colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+    colorUnreliability: null,
     delay: 0
 };
 
@@ -479,6 +486,87 @@ const expected = {
         colorsProduced: { C: true, W: true, U: true, B: true, R: true, G: true },
         colorDelay: { C: 1, W: 1, U: 1, B: 1, R: 1, G: 1 },
         delay: 0
+    },
+    'Plaza of Harmony': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: true, W: true, U: true, B: true, R: true, G: true },
+        colorDelay: { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 },
+        delay: 0
+    },
+    'River of Tears': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: false, W: false, U: true, B: true, R: false, G: false },
+        colorDelay: { C: 0, W: 0, U: 1, B: 0, R: 0, G: 0 },
+        delay: 0
+    },
+    'Bottomless Vault': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: false, W: false, U: false, B: true, R: false, G: false },
+        colorDelay: { C: 0, W: 0, U: 0, B: 1, R: 0, G: 0 },
+        delay: 1
+    },
+    'Cabal Stronghold': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: true, W: false, U: false, B: true, R: false, G: false },
+        colorDelay: { C: 0, W: 0, U: 0, B: 3, R: 0, G: 0 },
+        colorUnreliability: { B: true },
+        delay: 0,
+        
+    },
+    'Cloudpost': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: true, W: false, U: false, B: false, R: false, G: false },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        delay: 1
+    },
+    'City of Shadows': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: true, W: false, U: false, B: false, R: false, G: false },
+        colorDelay: { C: 1, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { C: true },
+        delay: 0
     }
 };
 
@@ -563,9 +651,16 @@ const allTests = [
     new Land(meteorCrater),
     new Land(nykthos),
     new Land(reflectingPool),
+    new Land(plazaOfHarmony),
+    new Land(riverOfTears),
+
+    new Land(bottomlessVault),
+    new Land(cabalStronghold),
+    new Land(cloudpost),
+    new Land(cityOfShadows),
 ];
 runBatch(allTests);
 
-// console.log(new Land(thranPortal));
+// console.log(new Land(bottomlessVault));
 // console.log(new Land(cliffgate));
 // console.log(new Land(meteorCrater));

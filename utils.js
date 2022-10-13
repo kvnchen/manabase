@@ -18,9 +18,10 @@ const TYPE_MAP = {
 const TYPE_GROUP = `(${PLAINS}|${ISLAND}|${SWAMP}|${MOUNTAIN}|${FOREST})`;
 const ALL_GROUP_PLURAL = `(lands|${PLAINS}|${ISLAND}s|${SWAMP}s|${MOUNTAIN}s|${FOREST}s)`;
 
-function TestCase(str, d) {
+function TestCase(str, delay, func) {
     this.pattern = str;
-    this.d = d;
+    this.d = delay;
+    this.f = func;
 }
 
 // WARNING: type lines use the em dash "—" instead of en dash or the hyphen "-"
@@ -92,10 +93,10 @@ exports.colorsProduced = function(basicTypes) {
 };
 
 exports.parseOracle = function(oracle, name) {
-    const [canProduce, colorDelay] = parseManaAbilities(oracle, name);
+    const [canProduce, colorDelay, colorUnreliability] = parseManaAbilities(oracle, name);
     const delay = parseDelay(oracle, name);
 
-    return { canProduce, colorDelay, delay };
+    return { canProduce, colorDelay, delay, colorUnreliability };
 };
 
 // what colors could this land produce?
@@ -108,19 +109,21 @@ exports.parseOracle = function(oracle, name) {
 
     Restricted circumstances:
 
-        Add {U}. If you've played a land this turn, add {B} instead.
+        [x] Add {U}. If you've played a land this turn, add {B} instead.
             River of Tears
 
         Add one mana of any color. Spend this mana only to cast <type>
             Cavern of Souls
 
-        Add one mana of any color <condition>
+        [x] Add one mana of any color <condition>
             Reflecting Pool
 
         Add <type> for each <thing> you control
             Tolarian Academy
 
         [x] As ~ enters the battlefield, choose a color/basic
+
+        Remove a counter
 
         DFC cards
 
@@ -147,7 +150,10 @@ function parseManaAbilities(oracle, name) {
         G: 0
     };
 
-    const manaAbilityPattern = new RegExp(/.*{T}.*:\sAdd[{\w}\s,]+\./g);
+    // if the condition to produce mana can't reliably be met through basic actions
+    let colorUnreliability = null;
+
+    const manaAbilityPattern = new RegExp(/.*{T}.*:\sAdd[^\n]+/g);
     const manaAbilities = oracle.match(manaAbilityPattern);
 
     if (Array.isArray(manaAbilities)) {
@@ -198,7 +204,6 @@ function parseManaAbilities(oracle, name) {
         }
     };
 
-    // special case for nykthos needed...ugh...
     const chooseAType = {
         base: `.*choose a (basic|color).+`,
         subpatterns: [
@@ -225,23 +230,102 @@ function parseManaAbilities(oracle, name) {
             }
         }
     };
-    const reflecting = {
-        base: `Add one mana of any type that a land you control could produce\\.$`,
-        subpatterns: null,
-        func: () => {
-            colorDelay = { C: 1, W: 1, U: 1, B: 1, R: 1, G: 1 };
+    const anyType = {
+        base: `Add one mana of any type that a (land|Gate) you control could produce\\.$`,
+        subpatterns: [
+            // reflecting pool
+            new TestCase(
+                `land`, 
+                { C: 1, W: 1, U: 1, B: 1, R: 1, G: 1 }
+            ),
+            // plaza of harmony
+            new TestCase(
+                `Gate`, 
+                { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 }
+            )
+        ],
+        func: (text, subpatterns) => {
+            for (const sub of subpatterns) {
+                if (text.match(sub.pattern) && sub.d !== null) {
+                    colorDelay = sub.d;
+                }
+            }
         }
     };
 
-    // const reflectingPrefix = `Add one mana of any type that a land you control could produce\\.$`;
+    const addInstead = {
+        base: '.+add {\\w} instead\\.',
+        subpatterns: [`(?<={T}: Add {)\\w`], // river of tears
+        func: (text, subpatterns) => {
+            for (const sub of subpatterns) {
+                if (text.match(sub)) {
+                    colorDelay[text.match(sub)[0]] = 1;
+                }
+            }
+        }
+    };
+    
+    // cloudpost counts itself, so it doesn't need to be directly addressed here
+    const forEach = {
+        base: `.*add.+for each.+`,
+        subpatterns: [
+            new TestCase(
+                // fallen empires + masques storage lands
+                `Remove any number of storage counters from ${name}: Add {\\w} for each storage counter removed this way\\.`, 
+                null, 
+                (str) => {
+                    const symbol = str[0].match(/(?<=Add {)\w/);
+                    // console.log('canary 2');
+                    if (symbol)
+                        colorDelay[symbol[0]] = 1;
+                }
+            ),
+            new TestCase(
+                `{\\d}, {T}: Add {B} for each (basic )?Swamp you control`,
+                null,
+                (str) => {
+                    const cost = str[0].match(/(?<={)\d/);
+                    if (cost) {
+                        colorDelay['B'] = Number(cost[0]);
+                        colorUnreliability = { B: true };
+                    }
+                }
+            ),
+            new TestCase(
+                // city of shadows
+                `Add {\\w} for each storage counter on ${name}\\.`,
+                null,
+                (str) => {
+                    const cost = str[0].match(/(?<={)\w/);
+                    if (cost) {
+                        colorDelay[cost[0]] = 1;
+                        colorUnreliability = { C: true };
+                    }
+                }
+            )
+        ],
+        func: (text, subpatterns) => {
+            // console.log('canary 1');
+            for (const sub of subpatterns) {
+                const match = text.match(sub.pattern);
+                if (match) {
+                    sub.f(match);
+                }
+            }
+        }
+    };
+
+    // tainted lands + nimbus maze
 
     [
         urborg,
         chooseAType,
-        reflecting
+        anyType,
+        addInstead,
+        forEach
     ].forEach(testAndApply);
 
-    return [canProduce, colorDelay];
+    return [canProduce, colorDelay, colorUnreliability];
 }
 
 /*
