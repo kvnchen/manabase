@@ -73,6 +73,9 @@ const bottomlessVault = makeLandObj('Bottomless Vault', 'Land', "Bottomless Vaul
 const cabalStronghold = makeLandObj('Cabal Stronghold', 'Land', "{T}: Add {C}.\n{3}, {T}: Add {B} for each basic Swamp you control.");
 const cloudpost = makeLandObj('Cloudpost', "Land — Locus", "Cloudpost enters the battlefield tapped.\n{T}: Add {C} for each Locus on the battlefield.");
 const cityOfShadows = makeLandObj('City of Shadows', "Land", "{T}, Exile a creature you control: Put a storage counter on City of Shadows.\n{T}: Add {C} for each storage counter on City of Shadows.");
+const tolarianAcademy = makeLandObj('Tolarian Academy', 'Legendary Land', "{T}: Add {U} for each artifact you control.");
+const nimbusMaze = makeLandObj('Nimbus Maze', 'Land', "{T}: Add {C}.\n{T}: Add {W}. Activate only if you control an Island.\n{T}: Add {U}. Activate only if you control a Plains.");
+const taintedField = makeLandObj('Tainted Field', 'Land', "{T}: Add {C}.\n{T}: Add {W} or {B}. Activate only if you control a Swamp.");
 
 const template = {
     basicTypes: {
@@ -405,7 +408,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: true, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 4
+        colorUnreliability: { C: true },
+        delay: 0
     },
 
     'Urborg, Tomb of Yawgmoth': {
@@ -567,6 +571,48 @@ const expected = {
         colorDelay: { C: 1, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { C: true },
         delay: 0
+    },
+    'Tolarian Academy': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: false, W: false, U: true, B: false, R: false, G: false },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { U: true },
+        delay: 0
+    },
+    'Nimbus Maze': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: true, W: true, U: true, B: false, R: false, G: false },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { W: true, U: true },
+        delay: 0
+    },
+    'Tainted Field': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: true, W: true, U: false, B: true, R: false, G: false },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { W: true, B: true },
+        delay: 0
     }
 };
 
@@ -658,9 +704,12 @@ const allTests = [
     new Land(cabalStronghold),
     new Land(cloudpost),
     new Land(cityOfShadows),
+    new Land(tolarianAcademy),
+    new Land(nimbusMaze),
+    new Land(taintedField),
 ];
 runBatch(allTests);
 
-// console.log(new Land(bottomlessVault));
+console.log(new Land(taintedField));
 // console.log(new Land(cliffgate));
 // console.log(new Land(meteorCrater));

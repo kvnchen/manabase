@@ -127,6 +127,10 @@ exports.parseOracle = function(oracle, name) {
 
         DFC cards
 
+    so, turns out color delay as a concept has pretty narrow/small applicability
+    a lot of what I thought could be color delay is really just unreliability
+
+
 */
 function parseManaAbilities(oracle, name) {
     // bools? ints representing turn it could produce? this is awkward
@@ -186,14 +190,14 @@ function parseManaAbilities(oracle, name) {
     }
 
     function testAndApply({base, subpatterns, func}) {
-        const test = oracle.match(new RegExp(base, 'i'));
+        const test = oracle.match(base);
         if (test !== null) {
             func(test[0], subpatterns);
         }
     }
 
     const urborg = {
-        base: `^Each land is a ${TYPE_GROUP} in addition to its other land types\\.$`,
+        base: new RegExp(`^Each land is a ${TYPE_GROUP} in addition to its other land types\\.$`, 'i'),
         subpatterns: null,
         func: (match) => {
             for (const type of BASIC_TYPES) {
@@ -205,7 +209,7 @@ function parseManaAbilities(oracle, name) {
     };
 
     const chooseAType = {
-        base: `.*choose a (basic|color).+`,
+        base: new RegExp(`.*choose a (basic|color).+`, 'i'),
         subpatterns: [
             // meteor crater, assumed near impossible turn 1
             new TestCase(
@@ -231,7 +235,7 @@ function parseManaAbilities(oracle, name) {
         }
     };
     const anyType = {
-        base: `Add one mana of any type that a (land|Gate) you control could produce\\.$`,
+        base: new RegExp(`Add one mana of any type that a (land|Gate) you control could produce\\.$`, 'i'),
         subpatterns: [
             // reflecting pool
             new TestCase(
@@ -254,7 +258,7 @@ function parseManaAbilities(oracle, name) {
     };
 
     const addInstead = {
-        base: '.+add {\\w} instead\\.',
+        base: new RegExp('.+add {\\w} instead\\.', 'i'),
         subpatterns: [`(?<={T}: Add {)\\w`], // river of tears
         func: (text, subpatterns) => {
             for (const sub of subpatterns) {
@@ -267,7 +271,7 @@ function parseManaAbilities(oracle, name) {
     
     // cloudpost counts itself, so it doesn't need to be directly addressed here
     const forEach = {
-        base: `.*add.+for each.+`,
+        base: new RegExp(`.*add.+for each.+`, 'i'),
         subpatterns: [
             new TestCase(
                 // fallen empires + masques storage lands
@@ -296,10 +300,21 @@ function parseManaAbilities(oracle, name) {
                 `Add {\\w} for each storage counter on ${name}\\.`,
                 null,
                 (str) => {
-                    const cost = str[0].match(/(?<={)\w/);
-                    if (cost) {
-                        colorDelay[cost[0]] = 1;
+                    const symbol = str[0].match(/(?<={)\w/);
+                    if (symbol) {
+                        colorDelay[symbol[0]] = 1;
                         colorUnreliability = { C: true };
+                    }
+                }
+            ),
+            // usg cycle
+            new TestCase(
+                `Add {\\w} for each (creature|artifact|enchantment) you control\\.`,
+                null,
+                (str) => {
+                    const symbol = str[0].match(/(?<={)\w/);
+                    if (symbol) {
+                        colorUnreliability = { [symbol]: true };
                     }
                 }
             )
@@ -307,7 +322,7 @@ function parseManaAbilities(oracle, name) {
         func: (text, subpatterns) => {
             // console.log('canary 1');
             for (const sub of subpatterns) {
-                const match = text.match(sub.pattern);
+                const match = text.match(new RegExp(sub.pattern));
                 if (match) {
                     sub.f(match);
                 }
@@ -315,14 +330,49 @@ function parseManaAbilities(oracle, name) {
         }
     };
 
-    // tainted lands + nimbus maze
+    const onlyIf = {
+        base: new RegExp(`Add.+Activate only if.*`),
+        subpatterns: [
+            // temple of the false gods
+            new TestCase(
+                `\\w{1}(?=}\\..*Activate only if you control five or more lands)`, 
+                null,
+                (match) => {
+                    const symbol = match[0];
+                    colorUnreliability = { [symbol]: true };
+                }
+            ),
+            new TestCase(
+                `\\w(?=}.*Activate only if you control an? (Island|Plains|Swamp))`, 
+                null,
+                (match) => {
+                    colorUnreliability = {};
+                    for (const symbol of match) {
+                        colorUnreliability[symbol] = true;
+                    }
+                    if (name === 'Nimbus Maze') { // last resort
+                        colorUnreliability['U'] = true;
+                    }
+                }
+            )
+        ],
+        func: (text, subpatterns) => {
+            for (const sub of subpatterns) {
+                const match = text.match(new RegExp(sub.pattern, 'g'));
+                if (match) {
+                    sub.f(match);
+                }
+            }
+        }
+    };
 
     [
         urborg,
         chooseAType,
         anyType,
         addInstead,
-        forEach
+        forEach,
+        onlyIf
     ].forEach(testAndApply);
 
     return [canProduce, colorDelay, colorUnreliability];
@@ -487,24 +537,13 @@ function parseDelay(oracle, name) {
         ]
     };
 
-    // only temple of the false god is totally locked by this
-    // the tainted cycle and nimbus maze can make colorless without delay
-    const activateOnlyPrefix = `^{T}.+Add.+Activate only if.*`;
-    const activateOnly = {
-        base: activateOnlyPrefix,
-        subpatterns: [
-            new TestCase(`${activateOnlyPrefix} you control five or more lands\\.$`, 4)
-        ]
-    };
-
     const allTests = [
         etbTappedAndEtbEffect,
         etbTapped, 
         etbTappedUnless, 
         fetchlands,
         etbEffect,
-        ifWould,
-        activateOnly
+        ifWould
     ];
 
     for (const batch of allTests) {
