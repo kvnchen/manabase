@@ -53,11 +53,12 @@ const templeOfTheFalseGod = { name: 'Temple of the False God', type_line: 'Land'
 
 const azoriusChancery = { name: 'Azorius Chancery', type_line: 'Land', oracle_text: "Azorius Chancery enters the battlefield tapped.\nWhen Azorius Chancery enters the battlefield, return a land you control to its owner's hand.\n{T}: Add {W}{U}."};
 
-function makeLandObj(name, type_line, oracle_text) {
+function makeLandObj(name, type_line, oracle_text, card_faces) {
     return {
         name,
         type_line: type_line || 'Land',
-        oracle_text
+        oracle_text,
+        card_faces
     };
 }
 
@@ -76,6 +77,42 @@ const cityOfShadows = makeLandObj('City of Shadows', "Land", "{T}, Exile a creat
 const tolarianAcademy = makeLandObj('Tolarian Academy', 'Legendary Land', "{T}: Add {U} for each artifact you control.");
 const nimbusMaze = makeLandObj('Nimbus Maze', 'Land', "{T}: Add {C}.\n{T}: Add {W}. Activate only if you control an Island.\n{T}: Add {U}. Activate only if you control a Plains.");
 const taintedField = makeLandObj('Tainted Field', 'Land', "{T}: Add {C}.\n{T}: Add {W} or {B}. Activate only if you control a Swamp.");
+const branchloftPath = makeLandObj("Branchloft Pathway // Boulderloft Pathway", "Land // Land", undefined, [
+    {
+        name: "Branchloft Pathway",
+        type_line: "Land",
+        oracle_text: "{T}: Add {G}."
+    },
+    {
+        name: "Boulderloft Pathway",
+        type_line: "Land",
+        oracle_text: "{T}: Add {W}."
+    }
+]);
+const shatterskull = makeLandObj("Shatterskull Smashing // Shatterskull, the Hammer Pass", "Sorcery // Land", undefined, [
+    {
+        name: "Shatterskull Smashing",
+        type_line: "Sorcery",
+        oracle_text: "Shatterskull Smashing deals X damage divided as you choose among up to two target creatures and/or planeswalkers. If X is 6 or more, Shatterskull Smashing deals twice X damage divided as you choose among them instead."
+    },
+    {
+        name: "Shatterskull, the Hammer Pass",
+        type_line: "Land",
+        oracle_text: "As Shatterskull, the Hammer Pass enters the battlefield, you may pay 3 life. If you don't, it enters the battlefield tapped.\n{T}: Add {R}."
+    }
+]);
+const kazandu = makeLandObj("Kazandu Mammoth // Kazandu Valley", "Creature — Elephant // Land", undefined, [
+    {
+        name: "Kazandu Mammoth",
+        type_line: "Creature — Elephant",
+        oracle_text: "Landfall — Whenever a land enters the battlefield under your control, Kazandu Mammoth gets +2/+2 until end of turn."
+    },
+    {
+        name: "Kazandu Valley",
+        type_line: "Land",
+        oracle_text: "Kazandu Valley enters the battlefield tapped.\n{T}: Add {G}."
+    }
+]);
 
 const template = {
     basicTypes: {
@@ -613,6 +650,48 @@ const expected = {
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { W: true, B: true },
         delay: 0
+    },
+    'Branchloft Pathway // Boulderloft Pathway': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: false, W: true, U: false, B: false, R: false, G: true },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: null,
+        delay: 0
+    },
+    "Shatterskull Smashing // Shatterskull, the Hammer Pass": {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: false, W: false, U: false, B: false, R: true, G: false },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: null,
+        delay: 0
+    },
+    'Kazandu Mammoth // Kazandu Valley': {
+        basicTypes: {
+            Plains: false,
+            Island: false,
+            Swamp: false,
+            Mountain: false,
+            Forest: false
+        },
+        isBasic: false,
+        colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: true },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: null,
+        delay: 1
     }
 };
 
@@ -633,7 +712,13 @@ function runBatch(batch) {
         const failedProps = [];
         for (const prop in e) {
             if (typeof e[prop] === 'object') {
-                if (!doPropsMatch(e[prop], land[prop])) {
+                // null is an object...
+                if (e[prop] === null) {
+                    if (land[prop] !== null) {
+                        failedProps.push(prop);
+                        hasFailed = true;
+                    }
+                } else if (land[prop] === undefined || land[prop] === null || !doPropsMatch(e[prop], land[prop])) {
                     failedProps.push(prop);
                     hasFailed = true;
                 }
@@ -707,9 +792,10 @@ const allTests = [
     new Land(tolarianAcademy),
     new Land(nimbusMaze),
     new Land(taintedField),
+    new Land(branchloftPath),
+    new Land(shatterskull),
+    new Land(kazandu),
 ];
 runBatch(allTests);
 
-console.log(new Land(taintedField));
-// console.log(new Land(cliffgate));
-// console.log(new Land(meteorCrater));
+// console.log(new Land(kazandu));

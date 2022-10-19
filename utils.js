@@ -25,8 +25,25 @@ function TestCase(str, delay, func) {
 }
 
 // WARNING: type lines use the em dash "—" instead of en dash or the hyphen "-"
+// dfc have a "//"" separator
 exports.parseTypes = function(typeLine) {
     let types, subTypes = null;
+
+    if (typeLine.match(/\/\//) !== null) {
+        const split = typeLine.split(' // ');
+        types = new Set();
+        subTypes = new Set();
+        for (const half of split) {
+            const parsed = exports.parseTypes(half);
+            types.add(...parsed.types);
+            if (parsed.subTypes) {
+                subTypes.add(...parsed.subTypes);
+            }
+        }
+        types = Array.from(types);
+        subTypes = subTypes.size > 0 ? Array.from(subTypes) : null;
+        return { types, subTypes };
+    }
 
     if (typeLine.match(/—/) === null) {
         types = typeLine.split(' ');
@@ -93,10 +110,10 @@ exports.colorsProduced = function(basicTypes) {
 };
 
 exports.parseOracle = function(oracle, name) {
-    const [canProduce, colorDelay, colorUnreliability] = parseManaAbilities(oracle, name);
+    const [colorsProduced, colorDelay, colorUnreliability] = parseManaAbilities(oracle, name);
     const delay = parseDelay(oracle, name);
 
-    return { canProduce, colorDelay, delay, colorUnreliability };
+    return { colorsProduced, colorDelay, delay, colorUnreliability };
 };
 
 // what colors could this land produce?
@@ -114,16 +131,18 @@ exports.parseOracle = function(oracle, name) {
 
         Add one mana of any color. Spend this mana only to cast <type>
             Cavern of Souls
+            ffffff. need a conditional spending property...
 
         [x] Add one mana of any color <condition>
             Reflecting Pool
 
-        Add <type> for each <thing> you control
+        [x] Add <type> for each <thing> you control
             Tolarian Academy
 
         [x] As ~ enters the battlefield, choose a color/basic
 
-        Remove a counter
+        [x] activate only if 
+            tainted cycle, nimbus maze
 
         DFC cards
 
@@ -320,7 +339,6 @@ function parseManaAbilities(oracle, name) {
             )
         ],
         func: (text, subpatterns) => {
-            // console.log('canary 1');
             for (const sub of subpatterns) {
                 const match = text.match(new RegExp(sub.pattern));
                 if (match) {
@@ -555,3 +573,20 @@ function parseDelay(oracle, name) {
 
     return delay;
 }
+
+exports.mergeObjects = function(base, face) {
+    // console.log('this', base);
+    for (const prop in face) {
+        if (typeof face[prop] === 'object') {
+            if (typeof base[prop] === 'object') {
+                for (const p in base[prop]) {
+                    base[prop][p] = base[prop][p] || face[prop][p];
+                }
+            } else {
+                base[prop] = face[prop];
+            }
+        } else {
+            base[prop] = base[prop] || face[prop];
+        }
+    }
+};
