@@ -90,36 +90,17 @@ exports.getBasicTypes = function(types) {
          Add {X}. Activate only if you control
  */
 
-// probably unnecessary, as the mana abilities are still included in oracle
-exports.colorsProduced = function(basicTypes) {
-    const colors = {
-        C: false,
-        W: false,
-        U: false,
-        B: false,
-        R: false,
-        G: false
-    };
-
-    for (const type in basicTypes) {
-        const key = TYPE_MAP[type];
-        colors[key] = basicTypes[type];
-    }
-
-    return colors;
-};
-
 exports.parseOracle = function(oracle, name) {
-    const [colorsProduced, colorDelay, colorUnreliability] = parseManaAbilities(oracle, name);
+    const [colorsProduced, colorDelay, colorUnreliability, isFetch] = parseManaAbilities(oracle, name);
     const delay = parseDelay(oracle, name);
 
-    return { colorsProduced, colorDelay, delay, colorUnreliability };
+    return { colorsProduced, colorDelay, delay, colorUnreliability, isFetch };
 };
 
 // what colors could this land produce?
 /* 
     todo: 
-        lands that gain land types in oracle
+        [x] lands that gain land types in oracle
         fetchlands
             depends on other lands in deck... can't determine independently
         gaining mana abilities (Urza's Saga...)
@@ -176,6 +157,8 @@ function parseManaAbilities(oracle, name) {
     // if the condition to produce mana can't reliably be met through basic actions
     let colorUnreliability = null;
 
+    let isFetch = false;
+
     const manaAbilityPattern = new RegExp(/.*{T}.*:\sAdd[^\n]+/g);
     const manaAbilities = oracle.match(manaAbilityPattern);
 
@@ -228,18 +211,18 @@ function parseManaAbilities(oracle, name) {
     };
 
     const chooseAType = {
-        base: new RegExp(`.*choose a (basic|color).+`, 'i'),
+        base: new RegExp(`.*choose a (basic|color).+`, 'i'), // basic covers thran portal
         subpatterns: [
-            // meteor crater, assumed near impossible turn 1
+            // meteor crater
             new TestCase(
                 `Choose a color of a permanent you control\\. Add one mana of that color\\.$`, 
-                { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 }
+                { C: false, W: true, U: true, B: true, R: true, G: true }
             ),
 
-            // nykthos, also assumed nearly impossible t1
+            // nykthos
             new TestCase(
                 `Choose a color\\. Add an amount of mana of that color equal to your devotion to that color\\.`, 
-                { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 }
+                { C: false, W: true, U: true, B: true, R: true, G: true }
             ),
         ],
         func: (text, subpatterns) => {
@@ -248,29 +231,30 @@ function parseManaAbilities(oracle, name) {
             }
             for (const sub of subpatterns) {
                 if (text.match(sub.pattern) && sub.d !== null) {
-                    colorDelay = sub.d;
+                    colorUnreliability = sub.d;
                 }
             }
         }
     };
+
     const anyType = {
         base: new RegExp(`Add one mana of any type that a (land|Gate) you control could produce\\.$`, 'i'),
         subpatterns: [
-            // reflecting pool
+            // reflecting pool. a harsh evaluation
             new TestCase(
                 `land`, 
-                { C: 1, W: 1, U: 1, B: 1, R: 1, G: 1 }
+                { C: true, W: true, U: true, B: true, R: true, G: true }
             ),
             // plaza of harmony
             new TestCase(
                 `Gate`, 
-                { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 }
+                { C: false, W: true, U: true, B: true, R: true, G: true }
             )
         ],
         func: (text, subpatterns) => {
             for (const sub of subpatterns) {
                 if (text.match(sub.pattern) && sub.d !== null) {
-                    colorDelay = sub.d;
+                    colorUnreliability = sub.d;
                 }
             }
         }
@@ -298,7 +282,6 @@ function parseManaAbilities(oracle, name) {
                 null, 
                 (str) => {
                     const symbol = str[0].match(/(?<=Add {)\w/);
-                    // console.log('canary 2');
                     if (symbol)
                         colorDelay[symbol[0]] = 1;
                 }
@@ -306,12 +289,8 @@ function parseManaAbilities(oracle, name) {
             new TestCase(
                 `{\\d}, {T}: Add {B} for each (basic )?Swamp you control`,
                 null,
-                (str) => {
-                    const cost = str[0].match(/(?<={)\d/);
-                    if (cost) {
-                        colorDelay['B'] = Number(cost[0]);
-                        colorUnreliability = { B: true };
-                    }
+                () => {
+                    colorUnreliability = { B: true };
                 }
             ),
             new TestCase(
@@ -384,16 +363,24 @@ function parseManaAbilities(oracle, name) {
         }
     };
 
+    const fetch = {
+        base: new RegExp(`.+sacrifice.+search your library for (a|an).+, put it onto the battlefield.+`, 'i'),
+        func: () => {
+            isFetch = true;
+        }
+    };
+
     [
         urborg,
         chooseAType,
         anyType,
         addInstead,
         forEach,
-        onlyIf
+        onlyIf,
+        fetch
     ].forEach(testAndApply);
 
-    return [canProduce, colorDelay, colorUnreliability];
+    return [canProduce, colorDelay, colorUnreliability, isFetch];
 }
 
 /*
@@ -575,7 +562,6 @@ function parseDelay(oracle, name) {
 }
 
 exports.mergeObjects = function(base, face) {
-    // console.log('this', base);
     for (const prop in face) {
         if (typeof face[prop] === 'object') {
             if (typeof base[prop] === 'object') {
@@ -590,3 +576,29 @@ exports.mergeObjects = function(base, face) {
         }
     }
 };
+
+exports.canPayGeneric = function(isBasic, basicTypes, colorsProduced, colorUnreliability, isFetch) {
+    if (isBasic || isFetch)
+        return true;
+
+    for (const type in basicTypes) {
+        if (basicTypes[type])
+            return true;
+    }
+
+    const canProduce = Object.keys(colorsProduced).filter((key) => { return colorsProduced[key] === true });
+    
+    if (canProduce.length === 0)
+        return false;
+    
+    if (colorUnreliability == null) {
+        return true;
+    }
+
+    for (const color of canProduce) {
+        if (colorUnreliability[color] == null || colorUnreliability[color] === false)
+            return true;
+    }
+
+    return false;
+}

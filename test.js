@@ -1,4 +1,4 @@
-const { Card, Land } = require('./manabase.js');
+const { Card, Land, Manabase } = require('./manabase.js');
 
 const plains = { name: 'Plains', mana_cost: '', colors: [], type_line: 'Basic Land — Plains', oracle_text: '({T}: Add {W}.)' };
 const undergroundSea = { name: 'Underground Sea', mana_cost: '', colors: [], type_line: 'Land — Island Swamp', oracle_text: '({T}: Add {U} or {B}.)' };
@@ -126,7 +126,8 @@ const template = {
     colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: false },
     colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
     colorUnreliability: null,
-    delay: 0
+    delay: 0,
+    canPayGenericReliably: true
 };
 
 
@@ -142,7 +143,8 @@ const expected = {
         isBasic: true,
         colorsProduced: { C: false, W: true, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Ketria Triome': {
         basicTypes: {
@@ -155,7 +157,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: true, B: false, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'Plaza of Heroes': {
         basicTypes: {
@@ -168,7 +171,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: true, W: true, U: true, B: true, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Lotus Field': {
         basicTypes: {
@@ -181,7 +185,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: true, B: true, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 3
+        delay: 3,
+        canPayGenericReliably: true // hypergeometric assumes you hit the requisite number of lands
     },
     'Azorius Chancery': {
         basicTypes: {
@@ -194,7 +199,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: true, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 2
+        delay: 2,
+        canPayGenericReliably: true
     },
     'Drossforge Bridge': {
         basicTypes: {
@@ -207,7 +213,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: true, R: true, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'Blood Crypt': {
         basicTypes: {
@@ -220,7 +227,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: true, R: true, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Den of the Bugbear': {
         basicTypes: {
@@ -233,7 +241,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: false, R: true, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Blackcleave Cliffs': {
         basicTypes: {
@@ -246,7 +255,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: true, R: true, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Shipwreck Marsh': {
         basicTypes: {
@@ -259,7 +269,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: true, B: true, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'Mystic Sanctuary': {
         basicTypes: {
@@ -272,7 +283,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: true, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'Castle Ardenvale': {
         basicTypes: {
@@ -285,7 +297,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'Sunpetal Grove': {
         basicTypes: {
@@ -298,7 +311,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: false, B: false, R: false, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'Morphic Pool': {
         basicTypes: {
@@ -311,7 +325,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: true, B: true, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Temple of the Dragon Queen': {
         basicTypes: {
@@ -324,7 +339,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: true, B: true, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
 
     'Evolving Wilds': {
@@ -338,7 +354,9 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        isFetch: true,
+        canPayGenericReliably: true // behave like tapped lands in majority of scenarios
     },
     'Arid Mesa': {
         basicTypes: {
@@ -351,7 +369,9 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true,
+        isFetch: true
     },
     'Prismatic Vista': {
         basicTypes: {
@@ -364,7 +384,9 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true,
+        isFetch: true
     },
 
     'Brokers Hideout': {
@@ -378,7 +400,9 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true,
+        isFetch: true
     },
     'Rith\'s Grove': {
         basicTypes: {
@@ -391,7 +415,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: false, B: false, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
 
     'Lake of the Dead': {
@@ -405,7 +430,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: true, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true // gonna let this one slide...
     },
     'Sheltered Valley': {
         basicTypes: {
@@ -418,7 +444,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: true, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Lotus Vale': {
         basicTypes: {
@@ -431,7 +458,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: true, B: true, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 2
+        delay: 2,
+        canPayGenericReliably: true
     },
 
     'Temple of the False God': {
@@ -446,7 +474,8 @@ const expected = {
         colorsProduced: { C: true, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { C: true },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: false
     },
 
     'Urborg, Tomb of Yawgmoth': {
@@ -458,9 +487,11 @@ const expected = {
             Forest: false
         },
         isBasic: false,
+        isLegendary: true,
         colorsProduced: { C: false, W: false, U: false, B: true, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Cliffgate': {
         basicTypes: {
@@ -473,7 +504,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: true, B: true, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
 
     'Thran Portal': {
@@ -487,7 +519,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: true, U: true, B: true, R: true, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Meteor Crater': {
         basicTypes: {
@@ -499,8 +532,10 @@ const expected = {
         },
         isBasic: false,
         colorsProduced: { C: false, W: true, U: true, B: true, R: true, G: true },
-        colorDelay: { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 },
-        delay: 0
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { C: false, W: true, U: true, B: true, R: true, G: true },
+        delay: 0,
+        canPayGenericReliably: false
     },
     'Nykthos, Shrine to Nyx': {
         basicTypes: {
@@ -511,9 +546,12 @@ const expected = {
             Forest: false
         },
         isBasic: false,
+        isLegendary: true,
         colorsProduced: { C: true, W: true, U: true, B: true, R: true, G: true },
-        colorDelay: { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 },
-        delay: 0
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { C: false, W: true, U: true, B: true, R: true, G: true },
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Reflecting Pool': {
         basicTypes: {
@@ -525,8 +563,10 @@ const expected = {
         },
         isBasic: false,
         colorsProduced: { C: true, W: true, U: true, B: true, R: true, G: true },
-        colorDelay: { C: 1, W: 1, U: 1, B: 1, R: 1, G: 1 },
-        delay: 0
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { C: true, W: true, U: true, B: true, R: true, G: true },
+        delay: 0,
+        canPayGenericReliably: false
     },
     'Plaza of Harmony': {
         basicTypes: {
@@ -538,8 +578,10 @@ const expected = {
         },
         isBasic: false,
         colorsProduced: { C: true, W: true, U: true, B: true, R: true, G: true },
-        colorDelay: { C: 0, W: 1, U: 1, B: 1, R: 1, G: 1 },
-        delay: 0
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
+        colorUnreliability: { C: false, W: true, U: true, B: true, R: true, G: true },
+        delay: 0,
+        canPayGenericReliably: true
     },
     'River of Tears': {
         basicTypes: {
@@ -552,7 +594,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: true, B: true, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 1, B: 0, R: 0, G: 0 },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Bottomless Vault': {
         basicTypes: {
@@ -565,7 +608,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: false, W: false, U: false, B: true, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 1, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'Cabal Stronghold': {
         basicTypes: {
@@ -577,10 +621,10 @@ const expected = {
         },
         isBasic: false,
         colorsProduced: { C: true, W: false, U: false, B: true, R: false, G: false },
-        colorDelay: { C: 0, W: 0, U: 0, B: 3, R: 0, G: 0 },
+        colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { B: true },
         delay: 0,
-        
+        canPayGenericReliably: true
     },
     'Cloudpost': {
         basicTypes: {
@@ -593,7 +637,8 @@ const expected = {
         isBasic: false,
         colorsProduced: { C: true, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     },
     'City of Shadows': {
         basicTypes: {
@@ -607,7 +652,8 @@ const expected = {
         colorsProduced: { C: true, W: false, U: false, B: false, R: false, G: false },
         colorDelay: { C: 1, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { C: true },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: false
     },
     'Tolarian Academy': {
         basicTypes: {
@@ -618,10 +664,12 @@ const expected = {
             Forest: false
         },
         isBasic: false,
+        isLegendary: true,
         colorsProduced: { C: false, W: false, U: true, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { U: true },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: false
     },
     'Nimbus Maze': {
         basicTypes: {
@@ -635,7 +683,8 @@ const expected = {
         colorsProduced: { C: true, W: true, U: true, B: false, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { W: true, U: true },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Tainted Field': {
         basicTypes: {
@@ -649,7 +698,8 @@ const expected = {
         colorsProduced: { C: true, W: true, U: false, B: true, R: false, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: { W: true, B: true },
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Branchloft Pathway // Boulderloft Pathway': {
         basicTypes: {
@@ -663,7 +713,8 @@ const expected = {
         colorsProduced: { C: false, W: true, U: false, B: false, R: false, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: null,
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     "Shatterskull Smashing // Shatterskull, the Hammer Pass": {
         basicTypes: {
@@ -677,7 +728,8 @@ const expected = {
         colorsProduced: { C: false, W: false, U: false, B: false, R: true, G: false },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: null,
-        delay: 0
+        delay: 0,
+        canPayGenericReliably: true
     },
     'Kazandu Mammoth // Kazandu Valley': {
         basicTypes: {
@@ -691,7 +743,8 @@ const expected = {
         colorsProduced: { C: false, W: false, U: false, B: false, R: false, G: true },
         colorDelay: { C: 0, W: 0, U: 0, B: 0, R: 0, G: 0 },
         colorUnreliability: null,
-        delay: 1
+        delay: 1,
+        canPayGenericReliably: true
     }
 };
 
@@ -728,7 +781,7 @@ function runBatch(batch) {
             }
         }
         if (hasFailed) {
-            console.warn('\n' + land.name + ' fields:');
+            console.warn('\n' + land.name);
             for (const prop of failedProps) {
                 console.warn(`  ${prop}:`);
                 console.warn('    expected: ', e[prop]);
@@ -798,4 +851,13 @@ const allTests = [
 ];
 runBatch(allTests);
 
+// console.log(new Land(templeOfTheFalseGod));
 // console.log(new Land(kazandu));
+
+const manabase = new Manabase();
+manabase.addLands(allTests);
+
+// console.log(manabase.landMap);
+console.log(manabase.canReliablyProduce.U);
+console.log(manabase.basicTypes.Island);
+console.log(manabase.canPayGeneric);
