@@ -1,4 +1,5 @@
 const { Card, Land, Manabase } = require('./manabase.js');
+const { chancePayCost, pretty } = require('./hypergeometric.js');
 
 const plains = { name: 'Plains', mana_cost: '', colors: [], type_line: 'Basic Land — Plains', oracle_text: '({T}: Add {W}.)' };
 const undergroundSea = { name: 'Underground Sea', mana_cost: '', colors: [], type_line: 'Land — Island Swamp', oracle_text: '({T}: Add {U} or {B}.)' };
@@ -791,7 +792,7 @@ function runBatch(batch) {
         }
     }
     if (failed === 0) {
-        console.log('\nAll passed!');
+        console.log('\nAll passed!\n');
     } else {
         console.log('\nfailed: ', failed);
     }
@@ -858,6 +859,10 @@ const manabase = new Manabase();
 manabase.addLands(allTests);
 
 // console.log(manabase.landMap);
-console.log(manabase.canReliablyProduce.U);
-console.log(manabase.basicTypes.Island);
-console.log(manabase.canPayGeneric);
+// console.log(manabase.canReliablyProduce.R); // 13
+// console.log(manabase.basicTypes.Island);
+// console.log(manabase.canPayGeneric); // 37
+
+// console.log(manabase.landMap['Arid Mesa']);
+
+console.log(pretty(chancePayCost('{4}{C}', 4, manabase)));

@@ -86,7 +86,7 @@ function pretty(n) {
     c, w, u, b, r, g
   
   in detail:
-      for each possible number of lands n >= cmc
+      for each possible number of (reliable) lands n >= cmc
         probability(n) * canPayCost(cost, n, manabase)
   
 
@@ -101,44 +101,86 @@ function pretty(n) {
 
   for simple colored costs
 
-    2R
+    2R, 3, 40-9-8
 
       one colored pip
       probability of at least one R producing land among n lands
       
       hyper( reliable_lands, n, r_producers, num_pips )
-      hyper( 17, 3, 9, 1 )
+      atLeast( 17, 3, 9, 1 )
 
-  
+    1RR
+      atLeast(17, 3, 9 2)
 
+    if there's only one unique colored pip, can use atLeast()
+
+
+  for complex costs
+    1UR
+
+    exactly one R * (at least one U of remaining) +
+    exactly 2 R * (exactly one U in remaining or one of the R is U/R dual) +
+    exactly 3 R * (at least one U/R dual among the 3)
+
+    ugh... this sucks
+
+    UR
+
+      exactly 1 R and exactly U or
+      UR dual and exactly U or
+      UR dual and exactly R or
+      two UR duals
+
+    
 */
+function chancePayCost(cost, numLands, manabase) {
+  const genericTest = cost.match(/\d/);
+  const generic = genericTest ? Number(genericTest[0]) : null;
+  
+  const colorTest = cost.match(/[CWUBRGS]/g);
 
+  const colors = {};
+
+  // generic cost only
+  if (colorTest == null) {
+    if (manabase.canPayGeneric.count >= generic) {
+      return 1;
+    } else return 0;
+  }
+
+  for (const color of colorTest) {
+    if (colors[color]) {
+      colors[color]++;
+    } else {
+      colors[color] = 1;
+    }
+  }
+
+  if (Object.keys(colors).length === 1) {
+    // mono colored spell
+    const color = Object.keys(colors)[0];
+
+    return atLeast(manabase.canPayGeneric.count, numLands, manabase.canReliablyProduce[color].count, colors[color]);
+  } else {
+    // uh oh...
+    // return 0;
+
+    // need to know about duals for 2-colored cards
+    // for 3+... idk, seems rough
+    
+  }
+}
 
 
 
 
 module.exports.hypergeometric = hypergeometric;
 module.exports.atLeast = atLeast;
+module.exports.none = none;
 module.exports.pretty = pretty;
-
+module.exports.chancePayCost = chancePayCost;
 
 // console.log(factorial(7)); // 5040
 // console.log(binomial(7, 5)); // 21
 
 // problem with 3 2 2 1, for the none/atLeast calculations
-
-let population = Number(process.argv[2]);
-let sample = Number(process.argv[3]);
-let hits = Number(process.argv[4]);
-let target = Number(process.argv[5]);
-
-const args = [population, sample, hits, target];
-
-let exactly = hypergeometric(...args);
-let kOrMore = atLeast(...args);
-let miss = none(...args);
-
-console.log(`at least ${target}: ${pretty(kOrMore)}`); // at least 2 lands -> 82.3%
-console.log(`exactly ${target}: ${pretty(exactly)}`); // exactly 2 lands -> 28.4%
-console.log(`none: ${pretty(miss)}`); // none -> 3.07%
-
