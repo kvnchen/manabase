@@ -12,9 +12,13 @@ function spread(population, sample, hitRange, targetRange, weights) {
 
     for (let i = lower; i <= upper; i++) {
         let n = hypergeometric(population, sample, i, targetRange[0]);
+        const group = [];
 
-        blob.push(`${i} targets`);
-        blob.push(`${targetRange[0]} targets: ${pretty(n)}`);
+        group.push(i);
+        group.push([targetRange[0], pretty(n)]);
+
+        // blob.push(`${i} targets`);
+        // blob.push(`${targetRange[0]} targets: ${pretty(n)}`);
 
         if (Array.isArray(weights)) {
             n = n * weights[0];
@@ -24,7 +28,8 @@ function spread(population, sample, hitRange, targetRange, weights) {
             let sum = n;
             for (let j = 1; j < targetRange.length; j++) {
                 let m = hypergeometric(population, sample, i, targetRange[j]);
-                blob.push(`${targetRange[j]} targets: ${pretty(m)}`);
+                // blob.push(`${targetRange[j]} targets: ${pretty(m)}`);
+                group.push([targetRange[j], pretty(m)]);
 
                 if (Array.isArray(weights)) {
                     sum += (m * weights[j]);
@@ -32,14 +37,48 @@ function spread(population, sample, hitRange, targetRange, weights) {
                     sum += m;
                 }
             }
-            blob.push(`${targetRange[0]} through ${targetRange[targetRange.length - 1]}: ${pretty(sum)}`);
+            // blob.push(`${targetRange[0]} through ${targetRange[targetRange.length - 1]}${weights ? ' (weighted)' : ''}: ${pretty(sum)}`);
+            group.push([`${targetRange[0]}-${targetRange[targetRange.length - 1]}`,pretty(sum)]);
         }
 
-        blob.push('\n');
+        // blob.push('\n');
+        blob.push(group);
     }
 
+    // console.log(blob.join('\n'));
+    // console.log(blob);
+    return blob;
+}
+
+function textFormatter(data) {
+    const blob = [];
+
+    for (const row of data) {
+        blob.push(`${row[0]} targets`);
+
+        for (let i = 1; i < row.length; i++) {
+            blob.push(`${row[i][0]}: ${row[i][1]}`);
+        }
+        blob.push('\n');
+    }
+    console.log(blob.join('\n'));
+}
+
+function tableMarkdownFormatter(data) {
+    const blob = [];
+    
+    for (const row of data) {
+        blob.push('<tr>');
+        blob.push(`<td>${row[0]}</td>`);
+        
+        for (let i = 1; i < row.length; i++) {
+            blob.push(`<td>${row[i][1]}</td>`);
+        }
+        blob.push('</tr>');
+    }
     console.log(blob.join('\n'));
 }
   
-spread(population, sample, hitSpread, range, weights);
+textFormatter(spread(population, sample, hitSpread, range, weights));
+// tableMarkdownFormatter(spread(population, sample, hitSpread, range, weights));
   
