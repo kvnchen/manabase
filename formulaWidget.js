@@ -1,5 +1,18 @@
-// const { karsten } = require('./karstenFormula.js');
-
+/**
+ * control
+ * 
+ * canlander
+ * 2.39 2 2 2 0 0 'can'
+ * 37.08
+ * 
+ * edh
+ * 2.34 11 6 0 0 0 'commander' 1
+ * 33.99
+ * 
+ * aus
+ * 2.34 11 6 0 0 0 'aus'
+ * 19.28
+ */
 function karsten(avgmv, draw, ramp, fast, mdfc1, mdfc2, format, commanders) {
     let output;
 
@@ -18,29 +31,59 @@ function karsten(avgmv, draw, ramp, fast, mdfc1, mdfc2, format, commanders) {
     return output;
 }
 
+function toggleInputs(e) {
+    const inputGroup = document.getElementById('input-group');
+    const edhGroup = document.getElementById('edhGroup');
+    const ausGroup = document.getElementById('ausGroup');
+    const output = document.getElementById('output');
+
+    inputGroup.hidden = true;
+    edhGroup.hidden = true;
+    ausGroup.hidden = true;
+    output.hidden = true;
+
+    if (e.target.value === 'edh') {
+        edhGroup.hidden = false;
+    } else if (e.target.value === 'aus') {
+        ausGroup.hidden = false;
+    }
+    if (e.target.value !== '') {
+        inputGroup.hidden = false;
+    }
+}
+
 function calculate() {
     const output = document.getElementById('output');
     const format = document.getElementById('format-select').value;
 
-    const args = [
-        Number(document.getElementById('avgmv').value),
-        Number(document.getElementById('draw').value),
-        Number(document.getElementById('ramp').value),
-        Number(document.getElementById('fast').value),
-        Number(document.getElementById('mdfc1').value),
-        Number(document.getElementById('mdfc2').value),
-        format
-    ];
-    if (format === 'edh') {
-        args.push(Number(document.getElementById('commanders').value));
+    try {
+        const args = [
+            Number(document.getElementById('avgmv').value),
+            Number(document.getElementById('draw').value),
+            Number(document.getElementById('ramp').value),
+            Number(document.getElementById('fast').value),
+            Number(document.getElementById('mdfc1').value),
+            Number(document.getElementById('mdfc2').value),
+            format
+        ];
+        if (format === 'edh') {
+            args.push(Number(document.getElementById('commanders').value));
+        }
+        if (format === 'aus') {
+            args.push(Number(document.getElementById('companion').value));
+        }
+    
+        output.innerHTML = `Recommended number of lands: <strong>${karsten(...args)}</strong>`;
+        output.hidden = false;
+    } catch (err) {
+        console.error(err);
+        output.innerHTML = `Error: ${err.message}`;
+        output.hidden = false;
     }
-    if (format === 'aus') {
-        args.push(Number(document.getElementById('companion').value));
-    }
-
-    output.innerText = `Recommended number of lands: ${karsten(...args)}`;
-    output.hidden = false;
 }
+
+const select = document.getElementById('format-select');
+select.addEventListener('change', toggleInputs, false);
 
 const button = document.getElementById('calc');
 button.addEventListener('click', calculate, false);
