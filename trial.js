@@ -24,11 +24,9 @@ function run(p,s,h) {
     return result;
 }
 
-// console.log(run(population, sample, hits));
-
 function trial(population, sample, hits, runs) {
-    let resultArr = [0,0,0,0,0,0,0,0];
-    let blob = [];
+    const resultArr = [0,0,0,0,0,0,0,0];
+    const blob = [];
     let expectedValue = 0;
 
     for (let i = 0; i < runs; i++) {
