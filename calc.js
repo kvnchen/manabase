@@ -10,7 +10,8 @@ const args = [population, sample, hits, target];
 function calc(name, func, args) {
   try {
     const attempt = func(...args);
-    console.log(`${name} ${target}: ${pretty(attempt)}`);
+    const showTarget = (func === none) ? '' : ` ${target}`;
+    console.log(`${name}${showTarget}: ${pretty(attempt)}`);
   } catch(err) {
     console.log(`${name} ${target}: Error: ${err.message}`);
   }
