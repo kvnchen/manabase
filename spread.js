@@ -17,9 +17,6 @@ function spread(population, sample, hitRange, targetRange, weights) {
         group.push(i);
         group.push([targetRange[0], pretty(n)]);
 
-        // blob.push(`${i} targets`);
-        // blob.push(`${targetRange[0]} targets: ${pretty(n)}`);
-
         if (Array.isArray(weights)) {
             n = n * weights[0];
         }
@@ -28,7 +25,6 @@ function spread(population, sample, hitRange, targetRange, weights) {
             let sum = n;
             for (let j = 1; j < targetRange.length; j++) {
                 let m = hypergeometric(population, sample, i, targetRange[j]);
-                // blob.push(`${targetRange[j]} targets: ${pretty(m)}`);
                 group.push([targetRange[j], pretty(m)]);
 
                 if (Array.isArray(weights)) {
@@ -37,16 +33,12 @@ function spread(population, sample, hitRange, targetRange, weights) {
                     sum += m;
                 }
             }
-            // blob.push(`${targetRange[0]} through ${targetRange[targetRange.length - 1]}${weights ? ' (weighted)' : ''}: ${pretty(sum)}`);
             group.push([`${targetRange[0]}-${targetRange[targetRange.length - 1]}`,pretty(sum)]);
         }
 
-        // blob.push('\n');
         blob.push(group);
     }
 
-    // console.log(blob.join('\n'));
-    // console.log(blob);
     return blob;
 }
 

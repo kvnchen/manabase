@@ -17,7 +17,7 @@ A command line hypergeometric calculator.
 
 exactly 2: 30.01%
 at least 2: 79.26%
-none 2: 3.881%
+none: 3.881%
 ```
 
 **Arguments**
