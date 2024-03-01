@@ -2,9 +2,46 @@
 
 A model for representing manabases in Magic: the Gathering decks with tools to calculate the probability of casting spells of certain mana costs on curve.
 
+## manabase.js
+
+### Class Card
+
+The `Card` object contains the basic properties that comprise a Magic: the Gathering card. Derrived from Scryfall's [card](https://scryfall.com/docs/api/cards) API.
+
+**Constructor**
+
+`new Card({ name, mana_cost, colors, type_line, oracle_text, card_faces })`
+
+Arguments
+
+`props`: An `<object>` containing properties.  
+- `name`: `<string>` The name of the card.
+- `mana_cost`: `<string>` The mana cost of the card. Mana symbols are wrapped in {} brackets. E.g. `{B}{B}{B}` for Doomsday.
+- `colors`: `<Array>` An array of color strings composing the card's colors. E.g. `['W', 'U']` for No More Lies.
+- `type_line`: `<string>` The type line of this card.
+- `oracle_text`: `<string>` The oracle text of this card.
+- `card_faces`: `<Array>` An array of Card Face objects.
+
+### Class Land
+
+A subclass of `Card`. `Land` objects contain various properties of lands, mostly regarding what kinds of mana they can produce.
+
+**Constructor**
+
+`new Land(props)`
+
+Same as Card.
+
+**Properties**
+
+`basicTypes`: `<object>` An object of the shape `{ Plains: true, Island: false, Swamp: false, Mountain: false, Forest: false }`. Maps land types to boolean values if the land has that type.  
+`isBasic`: `<boolean>` `true` if this is a Basic land.  
+`isLegendary`: `<boolean>` `true` if the land is legendary.  
+`colorsProduced`: `<object>` An object of shape `{ C: false, W: false, U: false, B: false, R: false, G: false }`. Maps a symbol representation of a type of mana to a boolean value of if the land can produce that kind of mana.  
+
 ## hypergeometric.js
 
-A collection of functions for performing hypergeometric calculations.
+A collection of functions for performing hypergeometric calculations, used as a module for other files.
 
 ## calc.js
 
