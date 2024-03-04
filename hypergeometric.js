@@ -180,7 +180,4 @@ module.exports.none = none;
 module.exports.pretty = pretty;
 module.exports.chancePayCost = chancePayCost;
 
-// console.log(factorial(7)); // 5040
-// console.log(binomial(7, 5)); // 21
-
 // problem with 3 2 2 1, for the none/atLeast calculations

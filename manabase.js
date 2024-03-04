@@ -68,7 +68,7 @@ class countMap {
 }
 
 class Manabase {
-    constructor(cards) {
+    constructor() {
         // map of land name to object
         this.landMap = {};
 
@@ -115,7 +115,7 @@ class Manabase {
         }
     }
 
-    // function to eval fetchlands based on fetchable sources
+    // todo: function to eval fetchlands based on fetchable sources
 }
 
 exports.Card = Card;

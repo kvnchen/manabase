@@ -149,5 +149,41 @@ Same as Card.
 - `isLegendary`: `<boolean>` `true` if the land is legendary.  
 - `colorsProduced`: `<object>` An object of shape :
   - `{ C: false, W: false, U: false, B: false, R: false, G: false }`
-  - Maps a symbol representation of a type of mana to a boolean value of if the land can produce that kind of mana.  
+  - Maps a symbol representation of a type of mana to a boolean value of if the land can produce that kind of mana.
 
+### Class countMap
+
+todo
+
+### Class Manabase
+
+The `Manabase` object contains a collection of `Land`s and tracks what kinds of mana the collection can produce.
+
+**Constructor**
+
+`new Manabase()`
+
+**Properties**
+
+- `landMap`: `<object>` maps the name of a `Land` to the object
+- `canReliablyProduce`: `<object>` an object of shape:
+  - `{ C: countMap, W: countMap, U: countMap, B: countMap, R: countMap, G: countMap }`
+  - for a given type of mana, maps to a `countMap` object representing lands that can produce that type of mana 
+- `canPayGeneric`: `<countMap>` map to track lands capable of producing colorless mana
+- `basicTypes`: `<object>` an object of shape:
+  - `{ Plains: countMap, Islands: countMap, Swamp: countMap, Mountain: countMap, Forest: countMap }`
+  - maps basic land types to `countMap`s tracking which lands are that type and how many are in the manabase
+
+**Methods**
+
+Manabase.prototype.addLands()
+
+`addLands()` iterates over an array of `Land`s and updates the maps in `Manabase` to track what kinds of mana and land types are contained.
+
+Parameters
+
+- `lands`: `<Array>` an array of `Land`s to process
+
+Return value
+
+None.

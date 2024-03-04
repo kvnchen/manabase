@@ -865,4 +865,4 @@ manabase.addLands(allTests);
 
 // console.log(manabase.landMap['Arid Mesa']);
 
-console.log(pretty(chancePayCost('{4}{C}', 4, manabase)));
+console.log(pretty(chancePayCost('{2}{B}{B}', 4, manabase)));
